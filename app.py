@@ -637,18 +637,20 @@ INDEX_CONFIG_LABELS = {
 }
 
 # ──────────────────────── FAISS index config/loader ─────────────────
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 INDEX_CONFIG = {
     "ESCO_en": {
         "label": "ESCO (Eiropas prasmju un kvalifikāciju datubāze)",
-        "path": "knowledge_base_sq8/faiss_esco_en",
+        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_esco_en"),
     },
     "SkillsFuture": {
         "label": "SkillsFuture (Singapūras mūžizglītības prasmju datubāze)",
-        "path": "knowledge_base_sq8/faiss_skillsfuture_idx",
+        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_skillsfuture_idx"),
     },
     "VAS_kompetences": {
         "label": "VAS kompetenču bibliotēka",
-        "path": "knowledge_base_sq8/faiss_vas_kompetences",
+        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_vas_kompetences"),
     },
 }
 
