@@ -668,7 +668,7 @@ def load_faiss_store(choice_key: str):
         raise ValueError(f"Unknown index key: {choice_key}")
     folder = cfg["path"]
 
-    # Try loading the .faiss file directly first
+    # Try loading via langchain FAISS.load_local first
     try:
         return FAISS.load_local(
             folder,
@@ -676,18 +676,29 @@ def load_faiss_store(choice_key: str):
             allow_dangerous_deserialization=True,
         )
     except Exception as e:
-        print(f"[load_faiss_store] .faiss load failed ({e}), rebuilding from vectors.npy ...")
+        print(f"[load_faiss_store] .faiss load_local failed ({e}), trying JSON rebuild ...")
 
-    # Fallback: rebuild FAISS index from portable numpy vectors + JSON metadata
-    vectors_path = os.path.join(folder, "vectors.npy")
+    # Fallback: rebuild FAISS index from index.json metadata + index.faiss or vectors.npy
     json_path = os.path.join(folder, "index.json")
-
-    vectors = np.load(vectors_path, allow_pickle=True).astype(np.float32)
-    index = faiss.IndexFlatL2(vectors.shape[1])
-    index.add(vectors)
+    faiss_path = os.path.join(folder, "index.faiss")
+    vectors_path = os.path.join(folder, "vectors.npy")
 
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    # Build the FAISS index: prefer reading the .faiss file, fall back to vectors.npy
+    if os.path.exists(faiss_path):
+        try:
+            index = faiss.read_index(faiss_path)
+        except Exception as e2:
+            print(f"[load_faiss_store] faiss.read_index failed ({e2}), loading vectors.npy ...")
+            vectors = np.load(vectors_path).astype(np.float32)
+            index = faiss.IndexFlatL2(vectors.shape[1])
+            index.add(vectors)
+    else:
+        vectors = np.load(vectors_path).astype(np.float32)
+        index = faiss.IndexFlatL2(vectors.shape[1])
+        index.add(vectors)
 
     docstore_dict = {
         doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
