@@ -1,23 +1,25 @@
 import faiss
 import shutil
 import os
+from pathlib import Path
 
-src = r"c:\LBSrv\pp-mi-asistents-prasmes\knowledge_base"
-dst = r"c:\LBSrv\pp-mi-asistents-prasmes\knowledge_base_sq8"
+BASE_DIR = Path(__file__).resolve().parent
+src = BASE_DIR / "knowledge_base"
+dst = BASE_DIR / "knowledge_base_sq8"
 
 index_names = ["faiss_esco_en", "faiss_skillsfuture_idx", "faiss_vas_kompetences"]
 
 for name in index_names:
-    dst_dir = os.path.join(dst, name)
+    dst_dir = dst / name
     os.makedirs(dst_dir, exist_ok=True)
 
-    src_index_path = os.path.join(src, name, "index.faiss")
-    src_pkl_path   = os.path.join(src, name, "index.pkl")
-    dst_index_path = os.path.join(dst_dir, "index.faiss")
-    dst_pkl_path   = os.path.join(dst_dir, "index.pkl")
+    src_index_path = src / name / "index.faiss"
+    src_pkl_path   = src / name / "index.pkl"
+    dst_index_path = dst_dir / "index.faiss"
+    dst_pkl_path   = dst_dir / "index.pkl"
 
     print(f"\n=== {name} ===")
-    flat_idx = faiss.read_index(src_index_path)
+    flat_idx = faiss.read_index(str(src_index_path))
     n, d = flat_idx.ntotal, flat_idx.d
     print(f"  Vectors: {n:,}  Dimensions: {d}")
 
@@ -35,7 +37,7 @@ for name in index_names:
         print(f"  Added {end:,}/{n:,}", end="\r")
     print()
 
-    faiss.write_index(sq_idx, dst_index_path)
+    faiss.write_index(sq_idx, str(dst_index_path))
     shutil.copy2(src_pkl_path, dst_pkl_path)
 
     orig_mb = os.path.getsize(src_index_path) / 1_048_576

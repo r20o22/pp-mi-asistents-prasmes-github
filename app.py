@@ -1,25 +1,17 @@
 import os
 import json
-import faiss
-import numpy as np
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import pandas as pd
-
-print(f"[startup] faiss-cpu version: {faiss.__version__  if hasattr(faiss, '__version__') else 'unknown'}")
-print(f"[startup] faiss has swigfaiss: {hasattr(faiss, 'swigfaiss')}")
 import dash
 from dash import dcc, html, Output, Input, State, dash_table
 import dash.exceptions as de
-from dotenv import load_dotenv
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_community.docstore.in_memory import InMemoryDocstore
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
-
-load_dotenv()
 
 # ───────────────────────────── Helpers ─────────────────────────────
 def l2_to_score(dist: float) -> float:
@@ -646,20 +638,21 @@ INDEX_CONFIG_LABELS = {
 }
 
 # ──────────────────────── FAISS index config/loader ─────────────────
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_DIR = Path(__file__).resolve().parent
+
 
 INDEX_CONFIG = {
     "ESCO_en": {
         "label": "ESCO (Eiropas prasmju un kvalifikāciju datubāze)",
-        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_esco_en"),
+        "path": Path("knowledge_base_sq8/faiss_esco_en"),
     },
     "SkillsFuture": {
         "label": "SkillsFuture (Singapūras mūžizglītības prasmju datubāze)",
-        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_skillsfuture_idx"),
+        "path": Path("knowledge_base_sq8/faiss_skillsfuture_idx"),
     },
     "VAS_kompetences": {
         "label": "VAS kompetenču bibliotēka",
-        "path": os.path.join(_BASE_DIR, "knowledge_base_sq8", "faiss_vas_kompetences"),
+        "path": Path("knowledge_base_sq8/faiss_vas_kompetences"),
     },
 }
 
@@ -669,99 +662,11 @@ def load_faiss_store(choice_key: str):
     cfg = INDEX_CONFIG.get(choice_key)
     if not cfg:
         raise ValueError(f"Unknown index key: {choice_key}")
-    folder = cfg["path"]
-
-    # Try loading via langchain FAISS.load_local first
-    try:
-        return FAISS.load_local(
-            folder,
-            embeddings,
-            allow_dangerous_deserialization=True,
-        )
-    except Exception as e:
-        print(f"[load_faiss_store] load_local failed ({e}), trying manual rebuild ...")
-
-    # Fallback: manually rebuild from available files
-    import pickle
-    faiss_path = os.path.join(folder, "index.faiss")
-    pkl_path = os.path.join(folder, "index.pkl")
-    json_path = os.path.join(folder, "index.json")
-    vectors_path = os.path.join(folder, "vectors.npy")
-
-    # ── Step 1: Load or rebuild the FAISS index ──
-    index = None
-    errors = []
-
-    # 1a: Try faiss.read_index (native binary)
-    if os.path.exists(faiss_path):
-        try:
-            index = faiss.read_index(faiss_path)
-        except Exception as e1:
-            errors.append(f"read_index: {e1}")
-            print(f"[load_faiss_store] faiss.read_index failed ({e1})")
-
-    # 1b: Try rebuilding from vectors.npy
-    if index is None and os.path.exists(vectors_path):
-        try:
-            vectors = np.load(vectors_path, allow_pickle=False).astype(np.float32)
-            index = faiss.IndexFlatL2(vectors.shape[1])
-            index.add(vectors)
-        except Exception as e2:
-            errors.append(f"vectors.npy: {e2}")
-            print(f"[load_faiss_store] vectors.npy load failed ({e2})")
-
-    if index is None:
-        raise RuntimeError(f"Cannot load FAISS index from {folder}: {'; '.join(errors)}")
-
-    # ── Step 2: Load docstore + id mapping ──
-    docstore_dict = None
-    index_to_docstore_id = None
-
-    # 2a: Try index.pkl
-    if os.path.exists(pkl_path):
-        try:
-            with open(pkl_path, "rb") as f:
-                pkl_data = pickle.load(f)
-            if isinstance(pkl_data, tuple) and len(pkl_data) == 2:
-                docstore_dict, index_to_docstore_id = pkl_data
-            elif isinstance(pkl_data, dict):
-                docstore_dict = pkl_data.get("docstore")
-                index_to_docstore_id = pkl_data.get("index_to_docstore_id")
-        except Exception as e3:
-            print(f"[load_faiss_store] pkl load failed ({e3}), trying index.json ...")
-
-    # 2b: Fall back to index.json
-    if docstore_dict is None and os.path.exists(json_path):
-        try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            docstore_dict = {
-                doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
-                for doc_id, doc in data["docstore"].items()
-            }
-            index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
-        except Exception as e4:
-            print(f"[load_faiss_store] json load failed ({e4})")
-
-    if docstore_dict is None:
-        raise RuntimeError(f"Cannot load docstore from {folder}: no pkl or json available")
-
-    # Wrap raw dicts into Document objects if needed
-    if docstore_dict and not isinstance(next(iter(docstore_dict.values())), Document):
-        docstore_dict = {
-            k: Document(page_content=v["page_content"], metadata=v.get("metadata", {}))
-            if isinstance(v, dict) else v
-            for k, v in docstore_dict.items()
-        }
-
-    if isinstance(index_to_docstore_id, dict):
-        index_to_docstore_id = {int(k): v for k, v in index_to_docstore_id.items()}
-
-    return FAISS(
-        embedding_function=embeddings,
-        index=index,
-        docstore=InMemoryDocstore(docstore_dict),
-        index_to_docstore_id=index_to_docstore_id,
+    index_path = APP_DIR / cfg["path"]
+    return FAISS.load_local(
+        str(index_path),
+        embeddings,
+        allow_dangerous_deserialization=True,
     )
 
 
@@ -1273,8 +1178,7 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
         source_label = INDEX_CONFIG[index_key]["label"]
         rows = topk_unique_prasme(user_text, target_unique, vector_store, source_label, index_key)
     except Exception as e:
-        faiss_ver = getattr(faiss, '__version__', 'unknown')
-        err = f"Embedding/FAISS kļūda (faiss-cpu={faiss_ver}): {e}"
+        err = f"Embedding/FAISS kļūda: {e}"
         data = [{"Kļūda": err}]
         df = pd.DataFrame(data)
         df_display = df.drop(columns=["Secība"], errors="ignore")
