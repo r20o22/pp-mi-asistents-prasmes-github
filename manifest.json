@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "locale": "Latvian_Latvia.1257",
+  "metadata": {
+    "appmode": "python-dash",
+    "entrypoint": "app"
+  },
+  "python": {
+    "version": "3.14.2",
+    "package_manager": {
+      "name": "pip",
+      "version": "25.3",
+      "package_file": "requirements.txt"
+    }
+  },
+  "files": {
+    "requirements.txt": { "checksum": "2bd98e9c39ba79f3e1d429cbeca649f7" },
+    ".env":             { "checksum": "960c0bb511940824ffb6b30ae590569f" },
+    "app.py":           { "checksum": "8615651013eb39eb1d3cfbcc868a0dbc" }
+  }
+}
