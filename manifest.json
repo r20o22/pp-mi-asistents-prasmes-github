@@ -6,16 +6,40 @@
     "entrypoint": "app"
   },
   "python": {
-    "version": "3.14.2",
+    "version": "3.14.5",
     "package_manager": {
       "name": "pip",
-      "version": "25.3",
+      "version": "26.1.1",
       "package_file": "requirements.txt"
     }
   },
   "files": {
-    "requirements.txt": { "checksum": "2bd98e9c39ba79f3e1d429cbeca649f7" },
-    ".env":             { "checksum": "960c0bb511940824ffb6b30ae590569f" },
-    "app.py":           { "checksum": "8615651013eb39eb1d3cfbcc868a0dbc" }
+    "requirements.txt": {
+      "checksum": "e604e35c8aad1ce7f8ccae5bcf557297"
+    },
+    "README.md": {
+      "checksum": "18166bad07a98b48bc755882f807fdec"
+    },
+    "app.py": {
+      "checksum": "91d0d70e2f99c7fbc6b5d5095dc50496"
+    },
+    "knowledge_base_sq8/faiss_esco_en/index.faiss": {
+      "checksum": "2e8593e292e27fc8dd816c60b0025747"
+    },
+    "knowledge_base_sq8/faiss_esco_en/index.pkl": {
+      "checksum": "cdfc83fa2c32328479723e223f2a594a"
+    },
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss": {
+      "checksum": "334cdbd7f014e31bb3918b38a83f345c"
+    },
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.pkl": {
+      "checksum": "3cf1c95630e59d7707f721519986c13a"
+    },
+    "knowledge_base_sq8/faiss_vas_kompetences/index.faiss": {
+      "checksum": "2b882ced739b2f0047afde7bd26d569e"
+    },
+    "knowledge_base_sq8/faiss_vas_kompetences/index.pkl": {
+      "checksum": "177d88409e3cb482d5fd04d0bf398510"
+    }
   }
 }
