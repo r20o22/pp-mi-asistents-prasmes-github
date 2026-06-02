@@ -2,7 +2,6 @@ import os
 import json
 import faiss
 import numpy as np
-import pickle
 from functools import lru_cache
 from typing import List, Dict, Any, Tuple
 import pandas as pd
@@ -15,6 +14,7 @@ import dash.exceptions as de
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_community.docstore.in_memory import InMemoryDocstore
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
@@ -678,21 +678,27 @@ def load_faiss_store(choice_key: str):
     except Exception as e:
         print(f"[load_faiss_store] .faiss load failed ({e}), rebuilding from vectors.npy ...")
 
-    # Fallback: rebuild FAISS index from portable numpy vectors + pkl metadata
+    # Fallback: rebuild FAISS index from portable numpy vectors + JSON metadata
     vectors_path = os.path.join(folder, "vectors.npy")
-    pkl_path = os.path.join(folder, "index.pkl")
+    json_path = os.path.join(folder, "index.json")
 
-    vectors = np.load(vectors_path).astype(np.float32)
+    vectors = np.load(vectors_path, allow_pickle=False).astype(np.float32)
     index = faiss.IndexFlatL2(vectors.shape[1])
     index.add(vectors)
 
-    with open(pkl_path, "rb") as f:
-        docstore, index_to_docstore_id = pickle.load(f)
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    docstore_dict = {
+        doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
+        for doc_id, doc in data["docstore"].items()
+    }
+    index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
 
     return FAISS(
         embedding_function=embeddings,
         index=index,
-        docstore=docstore,
+        docstore=InMemoryDocstore(docstore_dict),
         index_to_docstore_id=index_to_docstore_id,
     )
 
