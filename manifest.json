@@ -15,13 +15,13 @@
   },
   "files": {
     "requirements.txt": {
-      "checksum": "e604e35c8aad1ce7f8ccae5bcf557297"
+      "checksum": "30c397213b691cc2088942fe21b61f8f"
     },
     "README.md": {
       "checksum": "18166bad07a98b48bc755882f807fdec"
     },
     "app.py": {
-      "checksum": "91d0d70e2f99c7fbc6b5d5095dc50496"
+      "checksum": "5aa63ff62580e9cf987ced3ade4d70ce"
     },
     "knowledge_base_sq8/faiss_esco_en/index.faiss": {
       "checksum": "2e8593e292e27fc8dd816c60b0025747"
