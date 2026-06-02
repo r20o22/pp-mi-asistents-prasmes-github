@@ -1,0 +1,8 @@
+data/
+venv*/
+eval*/
+.env
+__pycache__/
+faiss_idx/
+knowledge_base/
+knowledge_base_compressed/
