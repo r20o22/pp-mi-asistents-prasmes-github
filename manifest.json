@@ -21,43 +21,46 @@
       "checksum": "18166bad07a98b48bc755882f807fdec"
     },
     "app.py": {
-      "checksum": "b9ce35fc58f40891feeabda38359ca31"
+      "checksum": "03592fd65145dc5e4af96166e0711e18"
     },
-    "knowledge_base_sq8/faiss_esco_en/index.faiss": {
-      "checksum": "2e8593e292e27fc8dd816c60b0025747"
+    "knowledge_base_sq8/faiss_esco_en/index.faiss.part000": {
+      "checksum": "d3c8ee476c73fd8d97470e3d071da81b"
     },
-    "knowledge_base_sq8/faiss_esco_en/index.json": {
-      "checksum": "42f5a2c777bff1be6282620ad63742c5"
+    "knowledge_base_sq8/faiss_esco_en/index.faiss.part001": {
+      "checksum": "3c47855fc957812657c361ad97d73c61"
+    },
+    "knowledge_base_sq8/faiss_esco_en/index.faiss.part002": {
+      "checksum": "a98a0e3f67ab059fb5e389ba4929aba8"
+    },
+    "knowledge_base_sq8/faiss_esco_en/index.faiss.part003": {
+      "checksum": "a723fb4dd3f7aee3dcef8f8f0cad7091"
     },
     "knowledge_base_sq8/faiss_esco_en/index.pkl": {
       "checksum": "cdfc83fa2c32328479723e223f2a594a"
     },
-    "knowledge_base_sq8/faiss_esco_en/vectors.npy": {
-      "checksum": "ea927b9972055acd58987ec2551d007c"
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss.part000": {
+      "checksum": "18bef8106465b1553019b71e69559616"
     },
-    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss": {
-      "checksum": "334cdbd7f014e31bb3918b38a83f345c"
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss.part001": {
+      "checksum": "c2e03a2be232d47de5ac4d1f096b2577"
     },
-    "knowledge_base_sq8/faiss_skillsfuture_idx/index.json": {
-      "checksum": "7bc008699e5e30590d4889a01028f601"
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss.part002": {
+      "checksum": "d9d5255fca5b8a29c8cae19afac7ae70"
+    },
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss.part003": {
+      "checksum": "70cd77cf66eb83bbd1d4062c31932905"
+    },
+    "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss.part004": {
+      "checksum": "98f8cdf6c417e3e468f1c5c34296fedc"
     },
     "knowledge_base_sq8/faiss_skillsfuture_idx/index.pkl": {
       "checksum": "3cf1c95630e59d7707f721519986c13a"
     },
-    "knowledge_base_sq8/faiss_skillsfuture_idx/vectors.npy": {
-      "checksum": "8e8509155fc12f58a1f59257dc5e9d93"
-    },
     "knowledge_base_sq8/faiss_vas_kompetences/index.faiss": {
       "checksum": "2b882ced739b2f0047afde7bd26d569e"
     },
-    "knowledge_base_sq8/faiss_vas_kompetences/index.json": {
-      "checksum": "32c21f3807437f11b836b0f6bc568040"
-    },
     "knowledge_base_sq8/faiss_vas_kompetences/index.pkl": {
       "checksum": "177d88409e3cb482d5fd04d0bf398510"
-    },
-    "knowledge_base_sq8/faiss_vas_kompetences/vectors.npy": {
-      "checksum": "87c4f1d8d6b3bdcc6c27455541204a7c"
     }
   }
 }

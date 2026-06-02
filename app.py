@@ -657,12 +657,26 @@ INDEX_CONFIG = {
 }
 
 
+def _reassemble_if_needed(index_dir: Path) -> None:
+    """If index.faiss is split into .partNNN chunks, reassemble it."""
+    target = index_dir / "index.faiss"
+    parts = sorted(index_dir.glob("index.faiss.part*"))
+    if not parts:
+        return  # no split files – original must exist
+    if target.exists() and target.stat().st_size > 0:
+        return  # already reassembled
+    with open(target, "wb") as out:
+        for p in parts:
+            out.write(p.read_bytes())
+
+
 @lru_cache(maxsize=8)
 def load_faiss_store(choice_key: str):
     cfg = INDEX_CONFIG.get(choice_key)
     if not cfg:
         raise ValueError(f"Unknown index key: {choice_key}")
     index_path = APP_DIR / cfg["path"]
+    _reassemble_if_needed(index_path)
     return FAISS.load_local(
         str(index_path),
         embeddings,
