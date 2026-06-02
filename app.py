@@ -679,48 +679,72 @@ def load_faiss_store(choice_key: str):
             allow_dangerous_deserialization=True,
         )
     except Exception as e:
-        print(f"[load_faiss_store] load_local failed ({e}), trying pkl fallback ...")
+        print(f"[load_faiss_store] load_local failed ({e}), trying manual rebuild ...")
 
-    # Fallback: load index.faiss + index.pkl (standard langchain serialization)
+    # Fallback: manually rebuild from available files
     import pickle
     faiss_path = os.path.join(folder, "index.faiss")
     pkl_path = os.path.join(folder, "index.pkl")
     json_path = os.path.join(folder, "index.json")
     vectors_path = os.path.join(folder, "vectors.npy")
 
-    # Load or rebuild the FAISS index
-    if os.path.exists(faiss_path):
-        index = faiss.read_index(faiss_path)
-    else:
-        vectors = np.load(vectors_path).astype(np.float32)
-        index = faiss.IndexFlatL2(vectors.shape[1])
-        index.add(vectors)
+    # ── Step 1: Load or rebuild the FAISS index ──
+    index = None
+    errors = []
 
-    # Load docstore + id mapping: prefer pkl, fall back to json
+    # 1a: Try faiss.read_index (native binary)
+    if os.path.exists(faiss_path):
+        try:
+            index = faiss.read_index(faiss_path)
+        except Exception as e1:
+            errors.append(f"read_index: {e1}")
+            print(f"[load_faiss_store] faiss.read_index failed ({e1})")
+
+    # 1b: Try rebuilding from vectors.npy
+    if index is None and os.path.exists(vectors_path):
+        try:
+            vectors = np.load(vectors_path, allow_pickle=False).astype(np.float32)
+            index = faiss.IndexFlatL2(vectors.shape[1])
+            index.add(vectors)
+        except Exception as e2:
+            errors.append(f"vectors.npy: {e2}")
+            print(f"[load_faiss_store] vectors.npy load failed ({e2})")
+
+    if index is None:
+        raise RuntimeError(f"Cannot load FAISS index from {folder}: {'; '.join(errors)}")
+
+    # ── Step 2: Load docstore + id mapping ──
     docstore_dict = None
     index_to_docstore_id = None
 
+    # 2a: Try index.pkl
     if os.path.exists(pkl_path):
         try:
             with open(pkl_path, "rb") as f:
                 pkl_data = pickle.load(f)
-            # langchain pkl stores (docstore_dict, index_to_docstore_id)
             if isinstance(pkl_data, tuple) and len(pkl_data) == 2:
                 docstore_dict, index_to_docstore_id = pkl_data
             elif isinstance(pkl_data, dict):
                 docstore_dict = pkl_data.get("docstore")
                 index_to_docstore_id = pkl_data.get("index_to_docstore_id")
-        except Exception as e2:
-            print(f"[load_faiss_store] pkl load failed ({e2}), trying index.json ...")
+        except Exception as e3:
+            print(f"[load_faiss_store] pkl load failed ({e3}), trying index.json ...")
+
+    # 2b: Fall back to index.json
+    if docstore_dict is None and os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            docstore_dict = {
+                doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
+                for doc_id, doc in data["docstore"].items()
+            }
+            index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
+        except Exception as e4:
+            print(f"[load_faiss_store] json load failed ({e4})")
 
     if docstore_dict is None:
-        with open(json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        docstore_dict = {
-            doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
-            for doc_id, doc in data["docstore"].items()
-        }
-        index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
+        raise RuntimeError(f"Cannot load docstore from {folder}: no pkl or json available")
 
     # Wrap raw dicts into Document objects if needed
     if docstore_dict and not isinstance(next(iter(docstore_dict.values())), Document):
