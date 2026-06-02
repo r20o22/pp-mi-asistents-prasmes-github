@@ -11,12 +11,15 @@ print(f"[startup] faiss has swigfaiss: {hasattr(faiss, 'swigfaiss')}")
 import dash
 from dash import dcc, html, Output, Input, State, dash_table
 import dash.exceptions as de
+from dotenv import load_dotenv
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
+
+load_dotenv()
 
 # ───────────────────────────── Helpers ─────────────────────────────
 def l2_to_score(dist: float) -> float:
