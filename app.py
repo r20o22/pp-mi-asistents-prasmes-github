@@ -682,7 +682,7 @@ def load_faiss_store(choice_key: str):
     vectors_path = os.path.join(folder, "vectors.npy")
     json_path = os.path.join(folder, "index.json")
 
-    vectors = np.load(vectors_path, allow_pickle=False).astype(np.float32)
+    vectors = np.load(vectors_path, allow_pickle=True).astype(np.float32)
     index = faiss.IndexFlatL2(vectors.shape[1])
     index.add(vectors)
 
