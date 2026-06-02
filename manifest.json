@@ -21,7 +21,7 @@
       "checksum": "18166bad07a98b48bc755882f807fdec"
     },
     "app.py": {
-      "checksum": "5aa63ff62580e9cf987ced3ade4d70ce"
+      "checksum": "e9372364bf6eebb73816790e3ba3f78f"
     },
     "knowledge_base_sq8/faiss_esco_en/index.faiss": {
       "checksum": "2e8593e292e27fc8dd816c60b0025747"
@@ -29,17 +29,26 @@
     "knowledge_base_sq8/faiss_esco_en/index.pkl": {
       "checksum": "cdfc83fa2c32328479723e223f2a594a"
     },
+    "knowledge_base_sq8/faiss_esco_en/vectors.npy": {
+      "checksum": "ea927b9972055acd58987ec2551d007c"
+    },
     "knowledge_base_sq8/faiss_skillsfuture_idx/index.faiss": {
       "checksum": "334cdbd7f014e31bb3918b38a83f345c"
     },
     "knowledge_base_sq8/faiss_skillsfuture_idx/index.pkl": {
       "checksum": "3cf1c95630e59d7707f721519986c13a"
     },
+    "knowledge_base_sq8/faiss_skillsfuture_idx/vectors.npy": {
+      "checksum": "8e8509155fc12f58a1f59257dc5e9d93"
+    },
     "knowledge_base_sq8/faiss_vas_kompetences/index.faiss": {
       "checksum": "2b882ced739b2f0047afde7bd26d569e"
     },
     "knowledge_base_sq8/faiss_vas_kompetences/index.pkl": {
       "checksum": "177d88409e3cb482d5fd04d0bf398510"
+    },
+    "knowledge_base_sq8/faiss_vas_kompetences/vectors.npy": {
+      "checksum": "87c4f1d8d6b3bdcc6c27455541204a7c"
     }
   }
 }

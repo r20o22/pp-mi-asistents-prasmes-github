@@ -1,6 +1,8 @@
 import os
 import json
 import faiss
+import numpy as np
+import pickle
 from functools import lru_cache
 from typing import List, Dict, Any, Tuple
 import pandas as pd
@@ -664,10 +666,34 @@ def load_faiss_store(choice_key: str):
     cfg = INDEX_CONFIG.get(choice_key)
     if not cfg:
         raise ValueError(f"Unknown index key: {choice_key}")
-    return FAISS.load_local(
-        cfg["path"],
-        embeddings,
-        allow_dangerous_deserialization=True,
+    folder = cfg["path"]
+
+    # Try loading the .faiss file directly first
+    try:
+        return FAISS.load_local(
+            folder,
+            embeddings,
+            allow_dangerous_deserialization=True,
+        )
+    except Exception as e:
+        print(f"[load_faiss_store] .faiss load failed ({e}), rebuilding from vectors.npy ...")
+
+    # Fallback: rebuild FAISS index from portable numpy vectors + pkl metadata
+    vectors_path = os.path.join(folder, "vectors.npy")
+    pkl_path = os.path.join(folder, "index.pkl")
+
+    vectors = np.load(vectors_path).astype(np.float32)
+    index = faiss.IndexFlatL2(vectors.shape[1])
+    index.add(vectors)
+
+    with open(pkl_path, "rb") as f:
+        docstore, index_to_docstore_id = pickle.load(f)
+
+    return FAISS(
+        embedding_function=embeddings,
+        index=index,
+        docstore=docstore,
+        index_to_docstore_id=index_to_docstore_id,
     )
 
 
