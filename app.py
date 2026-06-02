@@ -1,8 +1,12 @@
 import os
 import json
+import faiss
 from functools import lru_cache
 from typing import List, Dict, Any, Tuple
 import pandas as pd
+
+print(f"[startup] faiss-cpu version: {faiss.__version__  if hasattr(faiss, '__version__') else 'unknown'}")
+print(f"[startup] faiss has swigfaiss: {hasattr(faiss, 'swigfaiss')}")
 import dash
 from dash import dcc, html, Output, Input, State, dash_table
 import dash.exceptions as de
@@ -1175,7 +1179,8 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
         source_label = INDEX_CONFIG[index_key]["label"]
         rows = topk_unique_prasme(user_text, target_unique, vector_store, source_label, index_key)
     except Exception as e:
-        err = f"Embedding/FAISS kļūda: {e}"
+        faiss_ver = getattr(faiss, '__version__', 'unknown')
+        err = f"Embedding/FAISS kļūda (faiss-cpu={faiss_ver}): {e}"
         data = [{"Kļūda": err}]
         df = pd.DataFrame(data)
         df_display = df.drop(columns=["Secība"], errors="ignore")
