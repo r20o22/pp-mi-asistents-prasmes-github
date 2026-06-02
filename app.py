@@ -679,35 +679,59 @@ def load_faiss_store(choice_key: str):
             allow_dangerous_deserialization=True,
         )
     except Exception as e:
-        print(f"[load_faiss_store] .faiss load_local failed ({e}), trying JSON rebuild ...")
+        print(f"[load_faiss_store] load_local failed ({e}), trying pkl fallback ...")
 
-    # Fallback: rebuild FAISS index from index.json metadata + index.faiss or vectors.npy
-    json_path = os.path.join(folder, "index.json")
+    # Fallback: load index.faiss + index.pkl (standard langchain serialization)
+    import pickle
     faiss_path = os.path.join(folder, "index.faiss")
+    pkl_path = os.path.join(folder, "index.pkl")
+    json_path = os.path.join(folder, "index.json")
     vectors_path = os.path.join(folder, "vectors.npy")
 
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    # Build the FAISS index: prefer reading the .faiss file, fall back to vectors.npy
+    # Load or rebuild the FAISS index
     if os.path.exists(faiss_path):
-        try:
-            index = faiss.read_index(faiss_path)
-        except Exception as e2:
-            print(f"[load_faiss_store] faiss.read_index failed ({e2}), loading vectors.npy ...")
-            vectors = np.load(vectors_path).astype(np.float32)
-            index = faiss.IndexFlatL2(vectors.shape[1])
-            index.add(vectors)
+        index = faiss.read_index(faiss_path)
     else:
         vectors = np.load(vectors_path).astype(np.float32)
         index = faiss.IndexFlatL2(vectors.shape[1])
         index.add(vectors)
 
-    docstore_dict = {
-        doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
-        for doc_id, doc in data["docstore"].items()
-    }
-    index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
+    # Load docstore + id mapping: prefer pkl, fall back to json
+    docstore_dict = None
+    index_to_docstore_id = None
+
+    if os.path.exists(pkl_path):
+        try:
+            with open(pkl_path, "rb") as f:
+                pkl_data = pickle.load(f)
+            # langchain pkl stores (docstore_dict, index_to_docstore_id)
+            if isinstance(pkl_data, tuple) and len(pkl_data) == 2:
+                docstore_dict, index_to_docstore_id = pkl_data
+            elif isinstance(pkl_data, dict):
+                docstore_dict = pkl_data.get("docstore")
+                index_to_docstore_id = pkl_data.get("index_to_docstore_id")
+        except Exception as e2:
+            print(f"[load_faiss_store] pkl load failed ({e2}), trying index.json ...")
+
+    if docstore_dict is None:
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        docstore_dict = {
+            doc_id: Document(page_content=doc["page_content"], metadata=doc.get("metadata", {}))
+            for doc_id, doc in data["docstore"].items()
+        }
+        index_to_docstore_id = {int(k): v for k, v in data["index_to_docstore_id"].items()}
+
+    # Wrap raw dicts into Document objects if needed
+    if docstore_dict and not isinstance(next(iter(docstore_dict.values())), Document):
+        docstore_dict = {
+            k: Document(page_content=v["page_content"], metadata=v.get("metadata", {}))
+            if isinstance(v, dict) else v
+            for k, v in docstore_dict.items()
+        }
+
+    if isinstance(index_to_docstore_id, dict):
+        index_to_docstore_id = {int(k): v for k, v in index_to_docstore_id.items()}
 
     return FAISS(
         embedding_function=embeddings,
