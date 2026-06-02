@@ -1,0 +1,2 @@
+knowledge_base_sq8 filter=lfs diff=lfs merge=lfs -text
+knowledge_base_sq8/** filter=lfs diff=lfs merge=lfs -text
