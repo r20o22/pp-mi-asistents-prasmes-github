@@ -149,16 +149,16 @@ def _extract_system_only(text: str) -> str:
 embeddings = AzureOpenAIEmbeddings(
     deployment="text-embedding-3-large",
     model="text-embedding-3-large",
-    api_key=os.getenv("AZURE_EMBEDDING_OPENAI_API_KEY"),
-    azure_endpoint="https://azdtr-mgurtj8x-polandcentral.cognitiveservices.azure.com/",
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    azure_endpoint="https://pp-mi-darba-prasmes.cognitiveservices.azure.com/",
     openai_api_version="2024-12-01-preview",
 )
 
 chat_llm = AzureChatOpenAI(
-    deployment_name="gpt-5.1",
-    model_name="gpt-5.1",
+    deployment_name="gpt-5.4",
+    model_name="gpt-5.4",
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    azure_endpoint="https://pp-mi-asistents-darba-prasmes.cognitiveservices.azure.com/",
+    azure_endpoint="https://pp-mi-darba-prasmes.cognitiveservices.azure.com/",
     openai_api_version="2025-04-01-preview",
     temperature=0,
     reasoning_effort="none",
@@ -1135,7 +1135,7 @@ app.layout = html.Div(
 
                 # Hidden store + download component
                 dcc.Store(id="llm-output-store"),
-                dcc.Store(id="lang-store", data="lv"),
+                dcc.Store(id="lang-store", data="en"),
                 dcc.Download(id="download-results"),
             ],
         )
