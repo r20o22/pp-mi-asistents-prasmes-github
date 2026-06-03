@@ -162,6 +162,7 @@ chat_llm = AzureChatOpenAI(
     openai_api_version="2025-04-01-preview",
     temperature=0,
     reasoning_effort="none",
+    seed=42,
 )
 
 class SkillRow(BaseModel):
