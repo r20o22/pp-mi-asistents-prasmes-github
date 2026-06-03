@@ -1153,9 +1153,10 @@ app.layout = html.Div(
     State("query-input", "value"),
     State("llm-topk-input", "value"),
     State("faiss-choice", "value"),
+    State("lang-store", "data"),
     prevent_initial_call=True,
 )
-def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
+def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice, lang):
     """
     Single entrypoint:
     - FAISS meklēšana fonā (k = 10 * topk) izvēlētajā indeksā (ESCO_en / SkillsFuture)
@@ -1165,6 +1166,18 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
 
     dcc.Loading ap llm-table parāda progress ring visā šī callback izpildes laikā.
     """
+    _COL_NAMES_EN = {
+        "Loma": "Role",
+        "Prasme": "Skill",
+        "Prasmes apraksts": "Skill description",
+        "Citas lomas": "Other roles",
+    }
+
+    def _make_columns(df_cols, lang):
+        if (lang or "en") == "en":
+            return [{"name": _COL_NAMES_EN.get(col, col), "id": col} for col in df_cols]
+        return [{"name": col, "id": col} for col in df_cols]
+
     if not n_clicks:
         raise de.PreventUpdate
 
@@ -1174,7 +1187,7 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
         df = pd.DataFrame(data)
         # (no "Secība" here, but we keep logic consistent)
         df_display = df.drop(columns=["Secība"], errors="ignore")
-        columns = [{"name": col, "id": col} for col in df_display.columns]
+        columns = _make_columns(df_display.columns, lang)
         return {"text": "Lūdzu, ievadīt vaicājumu."}, df_display.to_dict("records"), columns
 
     # Only changeable numeric parameter: topk
@@ -1197,7 +1210,7 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
         data = [{"Kļūda": err}]
         df = pd.DataFrame(data)
         df_display = df.drop(columns=["Secība"], errors="ignore")
-        columns = [{"name": col, "id": col} for col in df_display.columns]
+        columns = _make_columns(df_display.columns, lang)
         return {"text": err}, df_display.to_dict("records"), columns
 
     # Prepare LLM prompt
@@ -1233,7 +1246,7 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
         data = [{"Kļūda": error_msg}]
         df = pd.DataFrame(data)
         df_display = df.drop(columns=["Secība"], errors="ignore")
-        columns = [{"name": col, "id": col} for col in df_display.columns]
+        columns = _make_columns(df_display.columns, lang)
         return {"text": error_msg}, df_display.to_dict("records"), columns
 
     # Convert JSON to rows/columns for the DataTable
@@ -1252,7 +1265,7 @@ def run_full_pipeline(n_clicks, user_text, llm_topk, faiss_choice):
     # ── Remove "Secība" column from the displayed table ─────────────
     df_display = df.drop(columns=["Secība"], errors="ignore")
 
-    columns = [{"name": col, "id": col} for col in df_display.columns]
+    columns = _make_columns(df_display.columns, lang)
 
     return store_value, df_display.to_dict("records"), columns
 
